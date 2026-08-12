@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 from sklearn.ensemble import RandomForestRegressor
 import json
 import re
+import urllib.parse
 
 # Optional Gemini integration
 try:
@@ -349,11 +350,22 @@ else:
                 if r['deal_gap'] > 2000:
                     st.success(f"💎 **ML Value Deal:** Listed ₹{int(r['deal_gap']):,} below algorithmic estimate.")
 
+                # Dynamic Store/Purchase Link Generation
+                encoded_name = urllib.parse.quote_plus(r['name'])
+                if category in ["Laptops", "Smartphones"]:
+                    product_url = f"https://www.amazon.in/s?k={encoded_name}"
+                    btn_label = f"🛒 View {r['name']} on Amazon"
+                else:
+                    product_url = f"https://www.cardekho.com/new-cars+{encoded_name.replace('+', '-')}"
+                    btn_label = f"🚗 View {r['name']} on CarDekho"
+
+                st.link_button(btn_label, product_url)
+
         csv_data = ranked.to_csv(index=False)
         st.download_button(f"📥 Export Ranked {category} (CSV)", data=csv_data, file_name=f"{category.lower()}_ranked.csv", mime="text/csv")
 
     with col2:
-        st.subheader("📊 Side-by-Side Breakdown")
+        st.subheader("📊 Side-by-Side Breakdown (Top 2)")
         if len(ranked) >= 2:
             r1, r2 = ranked.iloc[0], ranked.iloc[1]
             scores_1 = [round(r1['n1'] * 100, 1), round(r1['n2'] * 100, 1), round(r1['n3'] * 100, 1), round(r1['n4'] * 100, 1)]
