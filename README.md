@@ -1,5 +1,7 @@
 # ⚡ NexDecision: Multi-Category AI Decision Engine
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://nexdecision-w4sxpqy6g8y5pjr6b2xps7.streamlit.app/)
+
 An intelligent Multi-Criteria Decision Analysis (MCDA) web application designed to help consumers eliminate decision fatigue. Built with **Streamlit**, **SQLite**, and **Scikit-Learn**, NexDecision combines **MAUT (Multi-Attribute Utility Theory)** with an embedded **Random Forest Regressor** and **Natural Language Intent Parsing** to evaluate laptops, smartphones, and cars.
 
 ---
