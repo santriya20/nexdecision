@@ -353,7 +353,7 @@ else:
         st.download_button(f"📥 Export Ranked {category} (CSV)", data=csv_data, file_name=f"{category.lower()}_ranked.csv", mime="text/csv")
 
     with col2:
-        st.subheader("📊 Side-by-Side Breakdown(Top 2)")
+        st.subheader("📊 Side-by-Side Breakdown")
         if len(ranked) >= 2:
             r1, r2 = ranked.iloc[0], ranked.iloc[1]
             scores_1 = [round(r1['n1'] * 100, 1), round(r1['n2'] * 100, 1), round(r1['n3'] * 100, 1), round(r1['n4'] * 100, 1)]
