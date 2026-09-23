@@ -41,7 +41,7 @@ def init_db():
         )
     """)
 
-    # Seed Laptops with active search URLs
+    # Seed Laptops
     laptop_seeds = [
         ('Lenovo IdeaPad Slim 3', 'Lenovo', 45000, 65, 8, 512, 6.0, 1.65, 'https://www.amazon.in/s?k=Lenovo+IdeaPad+Slim+3'),
         ('HP Pavilion 15', 'HP', 62000, 78, 16, 512, 7.5, 1.75, 'https://www.amazon.in/s?k=HP+Pavilion+15'),
@@ -72,7 +72,7 @@ def init_db():
         )
     """)
 
-    # Seed Smartphones with active search URLs
+    # Seed Smartphones
     phone_seeds = [
         ('Redmi Note 13 Pro', 'Xiaomi', 22000, 200, 600000, 8, 128, 5000, 67, 'https://www.amazon.in/s?k=Redmi+Note+13+Pro'),
         ('Realme GT Neo 6 SE', 'Realme', 28000, 50, 850000, 12, 256, 5500, 100, 'https://www.amazon.in/s?k=Realme+GT+Neo+6+SE'),
@@ -325,11 +325,17 @@ else:
                     st.success(f"💎 **Value Deal:** Priced ₹{int(r['deal_gap']):,} below algorithmic valuation based on hardware specs.")
 
             with col2:
-                # Dynamic fallback link construction to prevent broken URLs
                 if category != "Cars":
-                    encoded_query = urllib.parse.quote(r['name'])
-                    buy_link = f"https://www.amazon.in/s?k={encoded_query}"
-                    btn_label = f"🛒 Search {r['name']} on Amazon"
+                    # Build specific query string including RAM/Storage specs
+                    spec_query = f"{r['brand']} {r['name']} {int(r['ram_gb'])}GB"
+                    encoded_query = urllib.parse.quote(spec_query)
+                    
+                    # Convert maximum budget into Amazon price filter format in paise (Price * 100)
+                    max_price_paise = int(budget * 100)
+                    
+                    # Appends price ceiling filter (0 to max_price_paise)
+                    buy_link = f"https://www.amazon.in/s?k={encoded_query}&rh=p_36%3A0-{max_price_paise}"
+                    btn_label = f"🛒 Search under ₹{int(budget):,} on Amazon"
                 else:
                     buy_link = r['buy_url']
                     btn_label = f"🚗 View {r['name']} on CarDekho"
