@@ -1,7 +1,6 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
-import urllib.parse
 
 # -----------------------------------------------------------------------------
 # 1. PAGE CONFIGURATION
@@ -26,12 +25,12 @@ def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Drop existing tables to establish clean dataset
+    # Drop old tables to establish clean schema
     cursor.execute("DROP TABLE IF EXISTS laptops;")
     cursor.execute("DROP TABLE IF EXISTS smartphones;")
     cursor.execute("DROP TABLE IF EXISTS cars;")
 
-    # 1. LAPTOPS TABLE (Active live-stock models)
+    # 1. LAPTOPS TABLE
     cursor.execute("""
         CREATE TABLE laptops (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,23 +41,22 @@ def init_db():
             ram_gb INTEGER NOT NULL,
             storage_gb INTEGER NOT NULL,
             battery_hours REAL NOT NULL,
-            weight_kg REAL NOT NULL,
-            buy_url TEXT NOT NULL
+            weight_kg REAL NOT NULL
         )
     """)
 
     laptop_seeds = [
-        ('MacBook Air M2', 'Apple', 74900, 92.0, 16, 256, 18.0, 1.24, ''),
-        ('MacBook Air M3', 'Apple', 94900, 96.0, 16, 512, 18.0, 1.24, ''),
-        ('Lenovo IdeaPad Slim 5', 'Lenovo', 62000, 82.0, 16, 512, 8.5, 1.46, ''),
-        ('HP Pavilion Plus 14', 'HP', 72000, 85.0, 16, 512, 7.5, 1.40, ''),
-        ('ASUS TUF Gaming F15', 'ASUS', 58000, 85.0, 16, 512, 4.5, 2.30, ''),
-        ('Acer Nitro V 15', 'Acer', 64000, 88.0, 16, 512, 4.5, 2.10, ''),
-        ('Dell Inspiron 14', 'Dell', 52000, 72.0, 8, 512, 8.0, 1.50, '')
+        ('MacBook Air M2', 'Apple', 74900, 92.0, 16, 256, 18.0, 1.24),
+        ('MacBook Air M3', 'Apple', 94900, 96.0, 16, 512, 18.0, 1.24),
+        ('Lenovo IdeaPad Slim 5', 'Lenovo', 62000, 82.0, 16, 512, 8.5, 1.46),
+        ('HP Pavilion Plus 14', 'HP', 72000, 85.0, 16, 512, 7.5, 1.40),
+        ('ASUS TUF Gaming F15', 'ASUS', 58000, 85.0, 16, 512, 4.5, 2.30),
+        ('Acer Nitro V 15', 'Acer', 64000, 88.0, 16, 512, 4.5, 2.10),
+        ('Dell Inspiron 14', 'Dell', 52000, 72.0, 8, 512, 8.0, 1.50)
     ]
     cursor.executemany("""
-        INSERT INTO laptops (name, brand, price, cpu_score, ram_gb, storage_gb, battery_hours, weight_kg, buy_url)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO laptops (name, brand, price, cpu_score, ram_gb, storage_gb, battery_hours, weight_kg)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, laptop_seeds)
 
     # 2. SMARTPHONES TABLE
@@ -73,21 +71,20 @@ def init_db():
             ram_gb INTEGER NOT NULL,
             storage_gb INTEGER NOT NULL,
             battery_mah REAL NOT NULL,
-            charging_watts REAL NOT NULL,
-            buy_url TEXT NOT NULL
+            charging_watts REAL NOT NULL
         )
     """)
 
     phone_seeds = [
-        ('Redmi Note 13 Pro 5G', 'Xiaomi', 21999, 200, 600000, 8, 128, 5100, 67, ''),
-        ('Realme GT 6T 5G', 'Realme', 30999, 50, 1500000, 12, 256, 5500, 120, ''),
-        ('OnePlus Nord CE 4', 'OnePlus', 24999, 50, 810000, 8, 128, 5500, 100, ''),
-        ('iQOO Z9 5G', 'iQOO', 19999, 50, 730000, 8, 128, 5000, 44, ''),
-        ('Samsung Galaxy A35 5G', 'Samsung', 27999, 50, 600000, 8, 128, 5000, 25, '')
+        ('Redmi Note 13 Pro 5G', 'Xiaomi', 21999, 200, 600000, 8, 128, 5100, 67),
+        ('Realme GT 6T 5G', 'Realme', 30999, 50, 1500000, 12, 256, 5500, 120),
+        ('OnePlus Nord CE 4', 'OnePlus', 24999, 50, 810000, 8, 128, 5500, 100),
+        ('iQOO Z9 5G', 'iQOO', 19999, 50, 730000, 8, 128, 5000, 44),
+        ('Samsung Galaxy A35 5G', 'Samsung', 27999, 50, 600000, 8, 128, 5000, 25)
     ]
     cursor.executemany("""
-        INSERT INTO smartphones (name, brand, price, camera_mp, antutu_score, ram_gb, storage_gb, battery_mah, charging_watts, buy_url)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO smartphones (name, brand, price, camera_mp, antutu_score, ram_gb, storage_gb, battery_mah, charging_watts)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, phone_seeds)
 
     # 3. CARS TABLE
@@ -100,34 +97,33 @@ def init_db():
             mileage_kmpl REAL NOT NULL,
             safety_rating REAL NOT NULL,
             power_bhp REAL NOT NULL,
-            boot_space_l REAL NOT NULL,
-            buy_url TEXT NOT NULL
+            boot_space_l REAL NOT NULL
         )
     """)
 
     car_seeds = [
-        ('Tata Nexon', 'Tata', 815000, 17.5, 5.0, 118, 382, 'https://www.cardekho.com/carmodels/Tata/Tata_Nexon'),
-        ('Maruti Brezza', 'Maruti', 834000, 20.1, 4.0, 102, 328, 'https://www.cardekho.com/carmodels/Maruti/Maruti_Brezza'),
-        ('Hyundai Creta', 'Hyundai', 1099000, 17.4, 3.0, 113, 433, 'https://www.cardekho.com/carmodels/Hyundai/Hyundai_Creta'),
-        ('Kia Seltos', 'Kia', 1089000, 17.0, 3.0, 113, 433, 'https://www.cardekho.com/carmodels/Kia/Kia_Seltos'),
-        ('Mahindra XUV300', 'Mahindra', 799000, 18.2, 5.0, 108, 257, 'https://www.cardekho.com/carmodels/Mahindra/Mahindra_XUV300')
+        ('Tata Nexon', 'Tata', 815000, 17.5, 5.0, 118, 382),
+        ('Maruti Brezza', 'Maruti', 834000, 20.1, 4.0, 102, 328),
+        ('Hyundai Creta', 'Hyundai', 1099000, 17.4, 3.0, 113, 433),
+        ('Kia Seltos', 'Kia', 1089000, 17.0, 3.0, 113, 433),
+        ('Mahindra XUV300', 'Mahindra', 799000, 18.2, 5.0, 108, 257)
     ]
     cursor.executemany("""
-        INSERT INTO cars (name, brand, price, mileage_kmpl, safety_rating, power_bhp, boot_space_l, buy_url)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO cars (name, brand, price, mileage_kmpl, safety_rating, power_bhp, boot_space_l)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     """, car_seeds)
 
     conn.commit()
     conn.close()
 
-# Initialize database on app startup
+# Initialize database on app launch
 init_db()
 
 # -----------------------------------------------------------------------------
 # 3. MAUT (MULTI-ATTRIBUTE UTILITY THEORY) ALGORITHM
 # -----------------------------------------------------------------------------
 def calculate_maut_score(df, weights, higher_is_better_flags):
-    """Normalizes numerical metrics to [0, 1] range and applies MAUT weighted score."""
+    """Normalizes numerical metrics to [0, 1] range and calculates MAUT weighted score."""
     scores = pd.Series(0.0, index=df.index)
     total_weight = sum(weights.values())
     
@@ -156,7 +152,7 @@ def calculate_maut_score(df, weights, higher_is_better_flags):
 # 4. STREAMLIT UI & SIDEBAR INPUTS
 # -----------------------------------------------------------------------------
 st.title("⚡ NexDecision Engine")
-st.caption("Multi-Attribute Utility Theory (MAUT) Recommendation Framework")
+st.caption("Multi-Attribute Utility Theory (MAUT) Decision Framework")
 
 sidebar = st.sidebar
 sidebar.header("1. Category & Budget")
@@ -218,7 +214,7 @@ else:
     st.subheader(f"Top {len(filtered_df)} Recommendations under ₹{max_price:,}")
 
     # -------------------------------------------------------------------------
-    # 6. RENDER RESULTS & PRECISION SEARCH LINKS
+    # 6. RENDER RESULTS (NO EXTERNAL LINKS)
     # -------------------------------------------------------------------------
     for idx, r in filtered_df.iterrows():
         match_score = r['maut_score']
@@ -227,13 +223,12 @@ else:
             col1, col2 = st.columns([3, 1])
             
             with col1:
-                st.markdown(f"### #{idx+1}: {r['brand']} {r['name']} — **₹{int(r['price']):,}** `(Match: {match_score:.1f}%)`")
+                st.markdown(f"### #{idx+1}: {r['brand']} {r['name']} — **₹{int(r['price']):,}**")
                 
-                # Render specification details
+                # Render spec details
                 if category == "Laptops":
                     st.write(f"**Specs:** {r['cpu_score']} CPU Score | {r['ram_gb']}GB RAM | {r['storage_gb']}GB SSD | {r['battery_hours']} hrs Battery | {r['weight_kg']} kg")
                     
-                    # Bottleneck Warning Trigger
                     if r['ram_gb'] < 16 and r['cpu_score'] >= 80:
                         st.warning("⚠️ **RAM Bottleneck Warning:** High CPU processing power constrained by 8GB RAM under heavy multitasking.")
                         
@@ -244,26 +239,7 @@ else:
                     st.write(f"**Specs:** {r['mileage_kmpl']} Kmpl | {r['safety_rating']}★ Safety | {r['power_bhp']} BHP | {r['boot_space_l']}L Boot Space")
 
             with col2:
-                # Check for explicit buy_url override, otherwise generate targeted URL
-                if r['buy_url'] and r['buy_url'].strip() != "":
-                    buy_link = r['buy_url']
-                else:
-                    if category == "Laptops":
-                        # Spec-injected Amazon query string
-                        search_term = f"{r['brand']} {r['name']} {int(r['ram_gb'])}GB {int(r['storage_gb'])}GB"
-                        encoded_query = urllib.parse.quote(search_term)
-                        # &i=computers restricts to PC hardware, &s=price-asc-rank sorts by lowest price
-                        buy_link = f"https://www.amazon.in/s?k={encoded_query}&i=computers&s=price-asc-rank"
-                    elif category == "Smartphones":
-                        search_term = f"{r['brand']} {r['name']} {int(r['ram_gb'])}GB {int(r['storage_gb'])}GB"
-                        encoded_query = urllib.parse.quote(search_term)
-                        buy_link = f"https://www.amazon.in/s?k={encoded_query}&i=electronics&s=price-asc-rank"
-                    else:
-                        search_term = f"{r['brand']} {r['name']}"
-                        encoded_query = urllib.parse.quote(search_term)
-                        buy_link = f"https://www.google.com/search?q={encoded_query}"
+                # Displays match score metric card instead of shopping link
+                st.metric(label="Decision Match", value=f"{match_score:.1f}%")
 
-                btn_label = f"🛒 Find {r['name']}"
-                st.link_button(btn_label, buy_link, use_container_width=True)
-                
         st.divider()
