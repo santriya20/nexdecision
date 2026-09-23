@@ -26,12 +26,12 @@ def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Drop old tables to rebuild clean schema
+    # Drop existing tables to establish clean dataset
     cursor.execute("DROP TABLE IF EXISTS laptops;")
     cursor.execute("DROP TABLE IF EXISTS smartphones;")
     cursor.execute("DROP TABLE IF EXISTS cars;")
 
-    # 1. LAPTOPS TABLE (Modern, active retail stock)
+    # 1. LAPTOPS TABLE (Active live-stock models)
     cursor.execute("""
         CREATE TABLE laptops (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -120,7 +120,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Auto-initialize database on launch
+# Initialize database on app startup
 init_db()
 
 # -----------------------------------------------------------------------------
@@ -218,7 +218,7 @@ else:
     st.subheader(f"Top {len(filtered_df)} Recommendations under ₹{max_price:,}")
 
     # -------------------------------------------------------------------------
-    # 6. RENDER RESULTS & PRECISION AMAZON SEARCH LINKS
+    # 6. RENDER RESULTS & PRECISION SEARCH LINKS
     # -------------------------------------------------------------------------
     for idx, r in filtered_df.iterrows():
         match_score = r['maut_score']
@@ -229,11 +229,11 @@ else:
             with col1:
                 st.markdown(f"### #{idx+1}: {r['brand']} {r['name']} — **₹{int(r['price']):,}** `(Match: {match_score:.1f}%)`")
                 
-                # Render specification tags
+                # Render specification details
                 if category == "Laptops":
                     st.write(f"**Specs:** {r['cpu_score']} CPU Score | {r['ram_gb']}GB RAM | {r['storage_gb']}GB SSD | {r['battery_hours']} hrs Battery | {r['weight_kg']} kg")
                     
-                    # Hardware Bottleneck Warning Alert
+                    # Bottleneck Warning Trigger
                     if r['ram_gb'] < 16 and r['cpu_score'] >= 80:
                         st.warning("⚠️ **RAM Bottleneck Warning:** High CPU processing power constrained by 8GB RAM under heavy multitasking.")
                         
@@ -244,20 +244,26 @@ else:
                     st.write(f"**Specs:** {r['mileage_kmpl']} Kmpl | {r['safety_rating']}★ Safety | {r['power_bhp']} BHP | {r['boot_space_l']}L Boot Space")
 
             with col2:
-                if category != "Cars":
-                    # Exact Spec-Injected Amazon Query Engine
-                    # Appends name, exact RAM, and exact storage directly into the search string
-                    search_term = f"{r['brand']} {r['name']} {int(r['ram_gb'])}GB {int(r['storage_gb'])}GB"
-                    encoded_query = urllib.parse.quote(search_term)
-                    
-                    # &i=computers restricts results to Laptops & Accessories
-                    # &s=price-asc-rank sorts by lowest price to suppress high-tier sponsored ad fallbacks
-                    buy_link = f"https://www.amazon.in/s?k={encoded_query}&i=computers&s=price-asc-rank"
-                    btn_label = f"🛒 Find {r['name']} on Amazon"
-                else:
+                # Check for explicit buy_url override, otherwise generate targeted URL
+                if r['buy_url'] and r['buy_url'].strip() != "":
                     buy_link = r['buy_url']
-                    btn_label = f"🚗 View {r['name']} on CarDekho"
+                else:
+                    if category == "Laptops":
+                        # Spec-injected Amazon query string
+                        search_term = f"{r['brand']} {r['name']} {int(r['ram_gb'])}GB {int(r['storage_gb'])}GB"
+                        encoded_query = urllib.parse.quote(search_term)
+                        # &i=computers restricts to PC hardware, &s=price-asc-rank sorts by lowest price
+                        buy_link = f"https://www.amazon.in/s?k={encoded_query}&i=computers&s=price-asc-rank"
+                    elif category == "Smartphones":
+                        search_term = f"{r['brand']} {r['name']} {int(r['ram_gb'])}GB {int(r['storage_gb'])}GB"
+                        encoded_query = urllib.parse.quote(search_term)
+                        buy_link = f"https://www.amazon.in/s?k={encoded_query}&i=electronics&s=price-asc-rank"
+                    else:
+                        search_term = f"{r['brand']} {r['name']}"
+                        encoded_query = urllib.parse.quote(search_term)
+                        buy_link = f"https://www.google.com/search?q={encoded_query}"
 
+                btn_label = f"🛒 Find {r['name']}"
                 st.link_button(btn_label, buy_link, use_container_width=True)
                 
         st.divider()
