@@ -326,16 +326,12 @@ else:
 
             with col2:
                 if category != "Cars":
-                    # Build specific query string including RAM/Storage specs
-                    spec_query = f"{r['brand']} {r['name']} {int(r['ram_gb'])}GB"
-                    encoded_query = urllib.parse.quote(spec_query)
+                    # Clean search query using exact product name + RAM spec
+                    search_term = f"{r['name']} {int(r['ram_gb'])}GB"
+                    encoded_query = urllib.parse.quote(search_term)
                     
-                    # Convert maximum budget into Amazon price filter format in paise (Price * 100)
-                    max_price_paise = int(budget * 100)
-                    
-                    # Appends price ceiling filter (0 to max_price_paise)
-                    buy_link = f"https://www.amazon.in/s?k={encoded_query}&rh=p_36%3A0-{max_price_paise}"
-                    btn_label = f"🛒 Search under ₹{int(budget):,} on Amazon"
+                    buy_link = f"https://www.amazon.in/s?k={encoded_query}"
+                    btn_label = f"🛒 Find {r['name']} on Amazon"
                 else:
                     buy_link = r['buy_url']
                     btn_label = f"🚗 View {r['name']} on CarDekho"
