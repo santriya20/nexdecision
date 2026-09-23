@@ -4,6 +4,7 @@ import sqlite3
 import plotly.graph_objects as go
 from sklearn.ensemble import RandomForestRegressor
 import re
+import urllib.parse
 
 # -------------------------------------------------------------------
 # 1. PAGE CONFIGURATION & DATABASE INITIALIZATION
@@ -19,12 +20,12 @@ def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # FORCE SCHEMA UPDATE: Drop old outdated tables if they exist
+    # Drop old outdated tables so they recreate with working URLs
     cursor.execute("DROP TABLE IF EXISTS laptops;")
     cursor.execute("DROP TABLE IF EXISTS smartphones;")
     cursor.execute("DROP TABLE IF EXISTS cars;")
 
-    # Create Laptops Table with buy_url
+    # Create Laptops Table
     cursor.execute("""
         CREATE TABLE laptops (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,21 +41,21 @@ def init_db():
         )
     """)
 
-    # Seed Laptops
+    # Seed Laptops with active search URLs
     laptop_seeds = [
-        ('Lenovo IdeaPad Slim 3', 'Lenovo', 45000, 65, 8, 512, 6.0, 1.65, 'https://www.amazon.in/dp/B08N15K6R2'),
-        ('HP Pavilion 15', 'HP', 62000, 78, 16, 512, 7.5, 1.75, 'https://www.amazon.in/dp/B09MH8R2M8'),
-        ('ASUS TUF Gaming F15', 'ASUS', 58000, 85, 8, 512, 4.5, 2.30, 'https://www.amazon.in/dp/B09RNC1234'),
-        ('Apple MacBook Air M1', 'Apple', 75000, 90, 8, 256, 15.0, 1.29, 'https://www.amazon.in/dp/B08N5WRWNW'),
-        ('Acer Nitro 5', 'Acer', 68000, 88, 16, 512, 4.0, 2.40, 'https://www.amazon.in/dp/B09X789ABC'),
-        ('Dell Inspiron 14', 'Dell', 52000, 72, 8, 512, 8.0, 1.50, 'https://www.amazon.in/dp/B09Y89DXYZ')
+        ('Lenovo IdeaPad Slim 3', 'Lenovo', 45000, 65, 8, 512, 6.0, 1.65, 'https://www.amazon.in/s?k=Lenovo+IdeaPad+Slim+3'),
+        ('HP Pavilion 15', 'HP', 62000, 78, 16, 512, 7.5, 1.75, 'https://www.amazon.in/s?k=HP+Pavilion+15'),
+        ('ASUS TUF Gaming F15', 'ASUS', 58000, 85, 8, 512, 4.5, 2.30, 'https://www.amazon.in/s?k=ASUS+TUF+Gaming+F15'),
+        ('Apple MacBook Air M1', 'Apple', 75000, 90, 8, 256, 15.0, 1.29, 'https://www.amazon.in/s?k=Apple+MacBook+Air+M1'),
+        ('Acer Nitro 5', 'Acer', 68000, 88, 16, 512, 4.0, 2.40, 'https://www.amazon.in/s?k=Acer+Nitro+5'),
+        ('Dell Inspiron 14', 'Dell', 52000, 72, 8, 512, 8.0, 1.50, 'https://www.amazon.in/s?k=Dell+Inspiron+14')
     ]
     cursor.executemany("""
         INSERT INTO laptops (name, brand, price, cpu_score, ram_gb, storage_gb, battery_hours, weight_kg, buy_url)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, laptop_seeds)
 
-    # Create Smartphones Table with buy_url
+    # Create Smartphones Table
     cursor.execute("""
         CREATE TABLE smartphones (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,20 +72,20 @@ def init_db():
         )
     """)
 
-    # Seed Smartphones
+    # Seed Smartphones with active search URLs
     phone_seeds = [
-        ('Redmi Note 13 Pro', 'Xiaomi', 22000, 200, 600000, 8, 128, 5000, 67, 'https://www.amazon.in/dp/B0CS5X1234'),
-        ('Realme GT Neo 6 SE', 'Realme', 28000, 50, 850000, 12, 256, 5500, 100, 'https://www.amazon.in/dp/B0CX785678'),
-        ('Samsung Galaxy M54', 'Samsung', 25000, 108, 550000, 8, 128, 6000, 25, 'https://www.amazon.in/dp/B0BS909012'),
-        ('OnePlus Nord 3', 'OnePlus', 32000, 50, 950000, 16, 256, 5000, 80, 'https://www.amazon.in/dp/B0C8901234'),
-        ('iQOO Z9 5G', 'iQOO', 20000, 50, 720000, 8, 128, 5000, 44, 'https://www.amazon.in/dp/B0CY123456')
+        ('Redmi Note 13 Pro', 'Xiaomi', 22000, 200, 600000, 8, 128, 5000, 67, 'https://www.amazon.in/s?k=Redmi+Note+13+Pro'),
+        ('Realme GT Neo 6 SE', 'Realme', 28000, 50, 850000, 12, 256, 5500, 100, 'https://www.amazon.in/s?k=Realme+GT+Neo+6+SE'),
+        ('Samsung Galaxy M54', 'Samsung', 25000, 108, 550000, 8, 128, 6000, 25, 'https://www.amazon.in/s?k=Samsung+Galaxy+M54'),
+        ('OnePlus Nord 3', 'OnePlus', 32000, 50, 950000, 16, 256, 5000, 80, 'https://www.amazon.in/s?k=OnePlus+Nord+3'),
+        ('iQOO Z9 5G', 'iQOO', 20000, 50, 720000, 8, 128, 5000, 44, 'https://www.amazon.in/s?k=iQOO+Z9+5G')
     ]
     cursor.executemany("""
         INSERT INTO smartphones (name, brand, price, camera_mp, antutu_score, ram_gb, storage_gb, battery_mah, charging_watts, buy_url)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, phone_seeds)
 
-    # Create Cars Table with buy_url
+    # Create Cars Table
     cursor.execute("""
         CREATE TABLE cars (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -117,7 +118,7 @@ def init_db():
 
 init_db()
 
-# Clear cache dynamically to force reloading the newly seeded SQLite database
+# Force clear cache on load to ensure old datasets are purged
 st.cache_data.clear()
 
 @st.cache_data
@@ -324,8 +325,16 @@ else:
                     st.success(f"💎 **Value Deal:** Priced ₹{int(r['deal_gap']):,} below algorithmic valuation based on hardware specs.")
 
             with col2:
-                btn_label = f"🛒 View {r['name']} on Amazon" if category != "Cars" else f"🚗 View {r['name']} on CarDekho"
-                st.link_button(btn_label, r['buy_url'])
+                # Dynamic fallback link construction to prevent broken URLs
+                if category != "Cars":
+                    encoded_query = urllib.parse.quote(r['name'])
+                    buy_link = f"https://www.amazon.in/s?k={encoded_query}"
+                    btn_label = f"🛒 Search {r['name']} on Amazon"
+                else:
+                    buy_link = r['buy_url']
+                    btn_label = f"🚗 View {r['name']} on CarDekho"
+
+                st.link_button(btn_label, buy_link)
 
     # -------------------------------------------------------------------
     # 8. VISUAL COMPARISON & DATA EXPORT
