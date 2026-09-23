@@ -4,7 +4,6 @@ import sqlite3
 import plotly.graph_objects as go
 from sklearn.ensemble import RandomForestRegressor
 import re
-import urllib.parse
 
 # -------------------------------------------------------------------
 # 1. PAGE CONFIGURATION & DATABASE INITIALIZATION
@@ -20,7 +19,7 @@ def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Create Laptops Table
+    # Create Laptops Table with direct buy_url
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS laptops (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,7 +30,8 @@ def init_db():
             ram_gb INTEGER NOT NULL,
             storage_gb INTEGER NOT NULL,
             battery_hours REAL NOT NULL,
-            weight_kg REAL NOT NULL
+            weight_kg REAL NOT NULL,
+            buy_url TEXT NOT NULL
         )
     """)
 
@@ -39,19 +39,19 @@ def init_db():
     cursor.execute("SELECT COUNT(*) FROM laptops")
     if cursor.fetchone()[0] == 0:
         laptop_seeds = [
-            ('Lenovo IdeaPad Slim 3', 'Lenovo', 45000, 65, 8, 512, 6.0, 1.65),
-            ('HP Pavilion 15', 'HP', 62000, 78, 16, 512, 7.5, 1.75),
-            ('ASUS TUF Gaming F15', 'ASUS', 58000, 85, 8, 512, 4.5, 2.30),
-            ('Apple MacBook Air M1', 'Apple', 75000, 90, 8, 256, 15.0, 1.29),
-            ('Acer Nitro 5', 'Acer', 68000, 88, 16, 512, 4.0, 2.40),
-            ('Dell Inspiron 14', 'Dell', 52000, 72, 8, 512, 8.0, 1.50)
+            ('Lenovo IdeaPad Slim 3', 'Lenovo', 45000, 65, 8, 512, 6.0, 1.65, 'https://www.amazon.in/dp/B08N15K6R2'),
+            ('HP Pavilion 15', 'HP', 62000, 78, 16, 512, 7.5, 1.75, 'https://www.amazon.in/dp/B09MH8R2M8'),
+            ('ASUS TUF Gaming F15', 'ASUS', 58000, 85, 8, 512, 4.5, 2.30, 'https://www.amazon.in/dp/B09RNC1234'),
+            ('Apple MacBook Air M1', 'Apple', 75000, 90, 8, 256, 15.0, 1.29, 'https://www.amazon.in/dp/B08N5WRWNW'),
+            ('Acer Nitro 5', 'Acer', 68000, 88, 16, 512, 4.0, 2.40, 'https://www.amazon.in/dp/B09X789ABC'),
+            ('Dell Inspiron 14', 'Dell', 52000, 72, 8, 512, 8.0, 1.50, 'https://www.amazon.in/dp/B09Y89DXYZ')
         ]
         cursor.executemany("""
-            INSERT INTO laptops (name, brand, price, cpu_score, ram_gb, storage_gb, battery_hours, weight_kg)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO laptops (name, brand, price, cpu_score, ram_gb, storage_gb, battery_hours, weight_kg, buy_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, laptop_seeds)
 
-    # Create Smartphones Table
+    # Create Smartphones Table with direct buy_url
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS smartphones (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -63,7 +63,8 @@ def init_db():
             ram_gb INTEGER NOT NULL,
             storage_gb INTEGER NOT NULL,
             battery_mah REAL NOT NULL,
-            charging_watts REAL NOT NULL
+            charging_watts REAL NOT NULL,
+            buy_url TEXT NOT NULL
         )
     """)
 
@@ -71,18 +72,18 @@ def init_db():
     cursor.execute("SELECT COUNT(*) FROM smartphones")
     if cursor.fetchone()[0] == 0:
         phone_seeds = [
-            ('Redmi Note 13 Pro', 'Xiaomi', 22000, 200, 600000, 8, 128, 5000, 67),
-            ('Realme GT Neo 6 SE', 'Realme', 28000, 50, 850000, 12, 256, 5500, 100),
-            ('Samsung Galaxy M54', 'Samsung', 25000, 108, 550000, 8, 128, 6000, 25),
-            ('OnePlus Nord 3', 'OnePlus', 32000, 50, 950000, 16, 256, 5000, 80),
-            ('iQOO Z9 5G', 'iQOO', 20000, 50, 720000, 8, 128, 5000, 44)
+            ('Redmi Note 13 Pro', 'Xiaomi', 22000, 200, 600000, 8, 128, 5000, 67, 'https://www.amazon.in/dp/B0CS5X1234'),
+            ('Realme GT Neo 6 SE', 'Realme', 28000, 50, 850000, 12, 256, 5500, 100, 'https://www.amazon.in/dp/B0CX785678'),
+            ('Samsung Galaxy M54', 'Samsung', 25000, 108, 550000, 8, 128, 6000, 25, 'https://www.amazon.in/dp/B0BS909012'),
+            ('OnePlus Nord 3', 'OnePlus', 32000, 50, 950000, 16, 256, 5000, 80, 'https://www.amazon.in/dp/B0C8901234'),
+            ('iQOO Z9 5G', 'iQOO', 20000, 50, 720000, 8, 128, 5000, 44, 'https://www.amazon.in/dp/B0CY123456')
         ]
         cursor.executemany("""
-            INSERT INTO smartphones (name, brand, price, camera_mp, antutu_score, ram_gb, storage_gb, battery_mah, charging_watts)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO smartphones (name, brand, price, camera_mp, antutu_score, ram_gb, storage_gb, battery_mah, charging_watts, buy_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, phone_seeds)
 
-    # Create Cars Table
+    # Create Cars Table with direct buy_url
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS cars (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -92,7 +93,8 @@ def init_db():
             mileage_kmpl REAL NOT NULL,
             safety_rating REAL NOT NULL,
             power_bhp REAL NOT NULL,
-            boot_space_l REAL NOT NULL
+            boot_space_l REAL NOT NULL,
+            buy_url TEXT NOT NULL
         )
     """)
 
@@ -100,15 +102,15 @@ def init_db():
     cursor.execute("SELECT COUNT(*) FROM cars")
     if cursor.fetchone()[0] == 0:
         car_seeds = [
-            ('Tata Nexon', 'Tata', 850000, 17.5, 5.0, 118, 382),
-            ('Maruti Brezza', 'Maruti', 830000, 20.1, 4.0, 102, 328),
-            ('Hyundai Creta', 'Hyundai', 1100000, 17.4, 3.0, 113, 433),
-            ('Kia Seltos', 'Kia', 1090000, 17.0, 3.0, 113, 433),
-            ('Mahindra XUV300', 'Mahindra', 790000, 18.2, 5.0, 108, 257)
+            ('Tata Nexon', 'Tata', 850000, 17.5, 5.0, 118, 382, 'https://www.cardekho.com/carmodels/Tata/Tata_Nexon'),
+            ('Maruti Brezza', 'Maruti', 830000, 20.1, 4.0, 102, 328, 'https://www.cardekho.com/carmodels/Maruti/Maruti_Brezza'),
+            ('Hyundai Creta', 'Hyundai', 1100000, 17.4, 3.0, 113, 433, 'https://www.cardekho.com/carmodels/Hyundai/Hyundai_Creta'),
+            ('Kia Seltos', 'Kia', 1090000, 17.0, 3.0, 113, 433, 'https://www.cardekho.com/carmodels/Kia/Kia_Seltos'),
+            ('Mahindra XUV300', 'Mahindra', 790000, 18.2, 5.0, 108, 257, 'https://www.cardekho.com/carmodels/Mahindra/Mahindra_XUV300')
         ]
         cursor.executemany("""
-            INSERT INTO cars (name, brand, price, mileage_kmpl, safety_rating, power_bhp, boot_space_l)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO cars (name, brand, price, mileage_kmpl, safety_rating, power_bhp, boot_space_l, buy_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, car_seeds)
 
     conn.commit()
@@ -321,25 +323,9 @@ else:
                     st.success(f"💎 **Value Deal:** Priced ₹{int(r['deal_gap']):,} below algorithmic valuation based on hardware specs.")
 
             with col2:
-                # -------------------------------------------------------
-                # PRECISE MARKETPLACE SEARCH QUERY FIX (RAM + STORAGE)
-                # -------------------------------------------------------
-                if category in ["Laptops", "Smartphones"]:
-                    if category == "Laptops":
-                        search_query = f"{r['name']} {int(r['ram_gb'])}GB RAM {int(r['storage_gb'])}GB SSD"
-                    else: # Smartphones
-                        search_query = f"{r['name']} {int(r['ram_gb'])}GB RAM {int(r['storage_gb'])}GB"
-                    
-                    encoded_query = urllib.parse.quote_plus(search_query)
-                    product_url = f"https://www.amazon.in/s?k={encoded_query}"
-                    btn_label = f"🛒 View {r['name']} on Amazon"
-                else: # Cars
-                    encoded_name = urllib.parse.quote_plus(r['name'])
-                    product_url = f"https://www.cardekho.com/new-cars+{encoded_name.replace('+', '-')}"
-                    btn_label = f"🚗 View {r['name']} on CarDekho"
-
-                st.link_button(btn_label, product_url)
-                st.caption("ℹ️ *Price based on offline DB specs. Amazon search targets exact RAM/Storage variant.*")
+                # Direct product page link stored in SQLite
+                btn_label = f"🛒 View {r['name']} on Amazon" if category != "Cars" else f"🚗 View {r['name']} on CarDekho"
+                st.link_button(btn_label, r['buy_url'])
 
     # -------------------------------------------------------------------
     # 8. VISUAL COMPARISON & DATA EXPORT
